@@ -1,18 +1,14 @@
-import Vue from 'vue';
-import App from './App.vue';
-import router from './router';
-import singleSpaVue from 'single-spa-vue';
+import { declareChildApplication, start } from 'single-spa';
+import './registerServiceWorker';
 
-Vue.config.productionTip = false;
+declareChildApplication('nav', () => import('./nav/main'), () => true);
+declareChildApplication('home', () => import('./home/main'), pathPrefix('/', ['/about']));
+declareChildApplication('about', () => import('./about/main'), pathPrefix('/about'));
 
-const vueLifecycles = singleSpaVue({
-  Vue,
-  appOptions: {
-    render: (h) => h(App),
-    router,
-  },
-});
+start();
 
-export const bootstrap = vueLifecycles.bootstrap;
-export const mount = vueLifecycles.mount;
-export const unmount = vueLifecycles.unmount;
+function pathPrefix(prefix, notAllowed = []) {
+    return function (location) {
+        return !notAllowed.map(p => pathPrefix(p)(location)).find(a => a) && location.pathname.indexOf(`${prefix}`) === 0;
+    }
+}
